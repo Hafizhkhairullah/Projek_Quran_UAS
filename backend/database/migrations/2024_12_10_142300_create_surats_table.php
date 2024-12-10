@@ -13,6 +13,13 @@ return new class extends Migration
     {
         Schema::create('surats', function (Blueprint $table) {
             $table->id();
+            $table->integer('nomor')->unique;
+            $table->string('nama');
+            $table->string('nama_latin');
+            $table->string('arti');
+            $table->integer('jumlah_ayat');
+            $table->string('tempat_turun');
+            $table->json('audio_full');
             $table->timestamps();
         });
     }
