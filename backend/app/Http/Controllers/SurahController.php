@@ -9,7 +9,7 @@ use App\Http\Resources\SurahResource;
 
 class SurahController extends Controller
 {
-    public function index()
+    public function surah()
     {
         // Mengambil data dari API eksternal
         $response = Http::get('https://equran.id/api/v2/surat');
