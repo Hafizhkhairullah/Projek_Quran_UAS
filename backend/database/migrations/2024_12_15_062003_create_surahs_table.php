@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('surahs', function (Blueprint $table) {
             $table->id();
-            $table->integer('nomor')->unique;
+            $table->integer('nomor')->unique();
             $table->string('nama');
             $table->string('nama_latin');
             $table->string('arti');
