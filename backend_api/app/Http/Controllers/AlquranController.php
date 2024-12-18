@@ -4,12 +4,15 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use GuzzleHttp\Client;
 use App\Models\Surah;
 use App\Models\Ayat;
 use App\Models\Tafsir;
+use App\Models\Jadwalsholat;
 use App\Http\Resources\SurahResource;
 use App\Http\Resources\AyatResource;
 use App\Http\Resources\TafsirResource;
+use App\Http\Resources\JadwalSholatResource;
 
 class AlquranController extends Controller
 {
@@ -51,7 +54,7 @@ class AlquranController extends Controller
 
     public function importAyat() {
 
-        $client = new \GuzzleHttp\Client([
+        $client = new Client([
             'timeout' => 7200,
             'connect_timeout' => 7200,
             'retry' => 10,
@@ -103,7 +106,7 @@ class AlquranController extends Controller
 
         public function importTafsir() {
 
-            $client = new \GuzzleHttp\Client([
+            $client = new Client([
                 'timeout' => 7200,
                 'connect_timeout' => 7200,
                'retry' => 10,
@@ -148,6 +151,101 @@ class AlquranController extends Controller
             'code' => 200,
             'message' => 'Data tafsir retrieved successfully',
             'data' => TafsirResource::collection($tafsir),
+        ]);
+    }
+
+    public function importJadwalsholat(Request $request) {
+        
+        $client = new Client();
+        
+        
+        $ipResponse = $client->get('http://ip-api.com/json');
+        $location = json_decode($ipResponse->getBody(), true);
+
+        $city = $location['city'];
+        $country = $location['countryCode'];
+        $timezone = new \DateTimeZone($location['timezone']);
+        
+        $year = $request->year;
+
+        for ($month = 1; $month <= 12; $month++) {
+            $response = $client->get("http://api.aladhan.com/v1/calendarByCity/{$year}/{$month}?city={$city}&country={$country}");
+            $data = json_decode($response->getBody(), true);
+
+            foreach ($data['data'] as $day) {
+                
+                $date = \DateTime::createFromFormat('d-m-Y', $day['date']['gregorian']['date']);
+                if ($date) {
+                    $formattedDate = $date->format('Y-m-d');
+
+                    $fajr = new \DateTime($day['timings']['Fajr']);
+                    $fajr->setTimezone($timezone);
+
+                    $dhuhr = new \DateTime($day['timings']['Dhuhr']);
+                    $dhuhr->setTimezone($timezone);
+
+                    $asr = new \DateTime($day['timings']['Asr']);
+                    $asr->setTimezone($timezone);
+
+                    $maghrib = new \DateTime($day['timings']['Maghrib']);
+                    $maghrib->setTimezone($timezone);
+
+                    $isha = new \DateTime($day['timings']['Isha']);
+                    $isha->setTimezone($timezone);
+                    
+                    Jadwalsholat::updateOrCreate(
+                        ['date' => $formattedDate],
+                        [
+                            'fajr' => $fajr->format('H:i'),
+                            'dhuhr' => $dhuhr->format('H:i'),
+                            'asr' => $asr->format('H:i'),
+                            'maghrib' => $maghrib->format('H:i'),
+                            'isha' => $isha->format('H:i'),
+                        ]
+                    );
+                } else {
+                    
+                    continue;
+                }
+            }
+        }
+
+        return response()->json(['message' => 'Prayer times imported successfully for the entire year']);
+    }
+
+    public function jadwalsholat(){
+        
+        $jadwalsholat = Jadwalsholat::all();
+
+        return response()->json([
+            'code' => 200,
+            'message' => 'Data jadwal sholat retrieved successfully',
+            'data' => JadwalsholatResource::collection($jadwalsholat),
+        ]);
+    }
+
+    public function jadwalsholatYM($year) {
+        
+        $jadwalsholat = Jadwalsholat::whereYear('date', $year)
+        ->get();
+
+        return response()->json([
+            'code' => 200,
+            'message' => 'Data jadwal sholat retrieved successfully',
+            'data' => JadwalsholatResource::collection($jadwalsholat),
+        ]);
+    }
+
+    public function jadwalsholatM($year, $month) {
+        
+        $jadwalsholat = Jadwalsholat::whereYear('date', $year)
+        ->whereMonth('date', $month)
+        ->get();
+
+        return response()->json([
+            'code' => 200,
+            'message' => 'Data jadwal sholat retrieved successfully',
+            'data' => JadwalsholatResource::collection($jadwalsholat),
         ]);
     }
 }
