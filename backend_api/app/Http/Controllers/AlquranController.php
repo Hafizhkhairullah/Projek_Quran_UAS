@@ -6,8 +6,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use App\Models\Surah;
 use App\Models\Ayat;
+use App\Models\Tafsir;
 use App\Http\Resources\SurahResource;
 use App\Http\Resources\AyatResource;
+use App\Http\Resources\TafsirResource;
 
 class AlquranController extends Controller
 {
@@ -98,4 +100,54 @@ class AlquranController extends Controller
                'data' => AyatResource::collection($ayat),
             ]);
         }
+
+        public function importTafsir() {
+
+            $client = new \GuzzleHttp\Client([
+                'timeout' => 7200,
+                'connect_timeout' => 7200,
+               'retry' => 10,
+            ]);
+
+            for ($nomor = 1; $nomor <= 114; $nomor++) {
+                $url = "https://equran.id/api/v2/tafsir/{$nomor}"; 
+                $response = Http::get($url);
+
+                if ($response->successful()) {
+                    $data = $response->json()['data']['tafsir'];
+
+                    foreach ($data as $ayat) {
+                        Tafsir::updateOrCreate([
+                            'nomor_surah' => $nomor,
+                            'nomor_ayat' => $ayat['ayat'],
+                        ],
+                        [
+                            'teks_tafsir' => $ayat['teks'],
+                        ]
+                    );
+                }
+            } else {
+                return response()->json([
+                    'code' => 500,
+                    'message' => 'Failed to fetch data tafsir for surah {$nomor} from external API'
+                ], 500);
+            }
+        }
+
+        return response()->json([
+            'code' => 200,
+            'message' => 'All tafsir data retrieved successfully'
+        ]);
+    }
+
+    public function tafsir($nomor) {
+        
+        $tafsir = Tafsir::where('nomor_surah', $nomor)->get();
+
+        return response()->json([
+            'code' => 200,
+            'message' => 'Data tafsir retrieved successfully',
+            'data' => TafsirResource::collection($tafsir),
+        ]);
+    }
 }
