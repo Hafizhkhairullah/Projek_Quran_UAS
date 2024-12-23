@@ -10,5 +10,7 @@ class Ayat extends Model
 
     protected $table = 'ayats';
 
-    protected $fillable = ['nomor_surah', 'nomor_ayat', 'teks_arab', 'teks_latin', 'teks_terjemahan'];
+    protected $fillable = ['nomor_surah', 'nomor_ayat', 'teks_arab', 'teks_latin', 'teks_terjemahan', 'audio'];
+
+    protected $casts = ['audio' => 'array'];
 }

@@ -13,8 +13,21 @@ return new class extends Migration
     {
         Schema::create('jadwalsholats', function (Blueprint $table) {
             $table->id();
-            $table->date('date');
+            $table->decimal('latitude', 15, 8);
+            $table->decimal('longitude', 15, 8);
+            $table->string('gregorian_date');
+            $table->string('gregorian_weekday_en');
+            $table->string('gregorian_day');
+            $table->string('gregorian_month');
+            $table->string('gregorian_year');
+            $table->string('hijri_date');
+            $table->string('hijri_weekday_en');
+            $table->string('hijri_day');
+            $table->string('hijri_month');
+            $table->string('hijri_year');
+            $table->string('imsak');
             $table->string('fajr');
+            $table->string('sunrise');
             $table->string('dhuhr');
             $table->string('asr');
             $table->string('maghrib');

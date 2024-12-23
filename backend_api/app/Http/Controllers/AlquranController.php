@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use GuzzleHttp\Client;
 use App\Models\Surah;
 use App\Models\Ayat;
@@ -60,6 +61,8 @@ class AlquranController extends Controller
             'retry' => 10,
         ]);
 
+        $failedSurah = [];  
+
         for ($nomor = 1; $nomor <= 114; $nomor++) {
             $url = "https://equran.id/api/v2/surat/{$nomor}";
             try {
@@ -77,22 +80,29 @@ class AlquranController extends Controller
                             'teks_arab' => $ayat['teksArab'],
                             'teks_latin' => $ayat['teksLatin'],
                             'teks_terjemahan' => $ayat['teksIndonesia'],
+                            'audio' => json_encode($ayat['audio']),
                         ]
                         );
                     }
                 } catch (\Exception $e) {
-                    return response()->json([
-                        'code' => 500,
-                        'message' => "Failed to fetch data Ayat for surah {$nomor} from external API: " . $e->getMessage()
-                    ], 500);
+                    Log::error("Failed to fetch data Ayat for surah {$nomor} from external API: " . $e->getMessage());
+                    $failedSurah[] = $nomor;
                 }
             } 
-            
-            return response()->json([
-                'code' => 200,
-                'message' => 'All ayat data retrieved successfully'
-            ]);
-        }
+
+            if (empty($failedSurahs)) { 
+                return response()->json([ 
+                    'code' => 200, 
+                    'message' => 'All ayat data retrieved successfully' 
+                ]);
+        } else {
+            return response()->json([ 
+                'code' => 206, 
+                'message' => 'Some ayat data failed to be retrieved', 
+                'failedSurahs' => $failedSurahs 
+            ]); 
+        } 
+    }
 
         public function ayat($nomor) {
 
@@ -155,97 +165,190 @@ class AlquranController extends Controller
     }
 
     public function importJadwalsholat(Request $request) {
+
+        $latitude = $request->query('latitude');
+        $longitude = $request->query('longitude');
+        $years = $request->query('years');
+
+        if (empty($latitude) || empty($longitude) || empty($years)) {
+            return response()->json([
+                'error' => 'Latitude, longitude, dan tahun wajib diisi.'
+            ], 400);
+        }
+
+        $years = explode(',', $years);
+        sort($years);
         
         $client = new Client();
         
-        
-        $ipResponse = $client->get('http://ip-api.com/json');
-        $location = json_decode($ipResponse->getBody(), true);
-
-        $city = $location['city'];
-        $country = $location['countryCode'];
-        $timezone = new \DateTimeZone($location['timezone']);
-        
-        $year = $request->year;
-
-        for ($month = 1; $month <= 12; $month++) {
-            $response = $client->get("http://api.aladhan.com/v1/calendarByCity/{$year}/{$month}?city={$city}&country={$country}");
-            $data = json_decode($response->getBody(), true);
-
-            foreach ($data['data'] as $day) {
-                
-                $date = \DateTime::createFromFormat('d-m-Y', $day['date']['gregorian']['date']);
-                if ($date) {
-                    $formattedDate = $date->format('Y-m-d');
-
-                    $fajr = new \DateTime($day['timings']['Fajr']);
-                    $fajr->setTimezone($timezone);
-
-                    $dhuhr = new \DateTime($day['timings']['Dhuhr']);
-                    $dhuhr->setTimezone($timezone);
-
-                    $asr = new \DateTime($day['timings']['Asr']);
-                    $asr->setTimezone($timezone);
-
-                    $maghrib = new \DateTime($day['timings']['Maghrib']);
-                    $maghrib->setTimezone($timezone);
-
-                    $isha = new \DateTime($day['timings']['Isha']);
-                    $isha->setTimezone($timezone);
+        try { 
+            foreach ($years as $year) { 
+                for ($month = 1; $month <= 12; $month++) { 
+                    $response = $client->request('GET', "http://api.aladhan.com/v1/calendar?latitude={$latitude}&longitude={$longitude}&method=2&month={$month}&year={$year}"); 
                     
-                    Jadwalsholat::updateOrCreate(
-                        ['date' => $formattedDate],
-                        [
-                            'fajr' => $fajr->format('H:i'),
-                            'dhuhr' => $dhuhr->format('H:i'),
-                            'asr' => $asr->format('H:i'),
-                            'maghrib' => $maghrib->format('H:i'),
-                            'isha' => $isha->format('H:i'),
-                        ]
-                    );
-                } else {
-                    
-                    continue;
-                }
+                    if ($response->getStatusCode() == 200) { 
+                        $body = $response->getBody()->getContents(); 
+                        $data = json_decode($body, true); 
+                        Log::info('Response body for year ' . $year . ', month ' . $month . ': ' . print_r($data, true)); 
+                        
+                        if (is_array($data) && isset($data['data'])) { 
+                            foreach ($data['data'] as $jadwal) { 
+                                Log::info('Data jadwal: ' . print_r($jadwal, true)); 
+                                
+                                JadwalSholat::create([ 
+                                    'latitude' => $latitude, 
+                                    'longitude' => $longitude, 
+                                    'gregorian_date' => $jadwal['date']['gregorian']['date'], 
+                                    'gregorian_weekday_en' => $jadwal['date']['gregorian']['weekday']['en'], 
+                                    'gregorian_day' => $jadwal['date']['gregorian']['day'], 
+                                    'gregorian_month' => $jadwal['date']['gregorian']['month']['en'], 
+                                    'gregorian_year' => $jadwal['date']['gregorian']['year'], 
+                                    'hijri_date' => $jadwal['date']['hijri']['date'], 
+                                    'hijri_weekday_en' => $jadwal['date']['hijri']['weekday']['en'], 
+                                    'hijri_day' => $jadwal['date']['hijri']['day'], 
+                                    'hijri_month' => $jadwal['date']['hijri']['month']['en'], 
+                                    'hijri_year' => $jadwal['date']['hijri']['year'], 
+                                    'imsak' => $jadwal['timings']['Imsak'], 
+                                    'fajr' => $jadwal['timings']['Fajr'], 
+                                    'sunrise' => $jadwal['timings']['Sunrise'], 
+                                    'dhuhr' => $jadwal['timings']['Dhuhr'], 
+                                    'asr' => $jadwal['timings']['Asr'], 
+                                    'maghrib' => $jadwal['timings']['Maghrib'], 
+                                    'isha' => $jadwal['timings']['Isha'] 
+                                ]); 
+                                
+                                Log::info('Data berhasil disimpan untuk tanggal: ' . $jadwal['date']['gregorian']['date']); 
+                            } 
+                        } else { 
+                            Log::error("Data tidak sesuai atau kosong untuk bulan: {$month}, tahun: {$year}."); 
+                        } 
+                    } else { 
+                        Log::error("Request gagal untuk bulan: {$month}, tahun: {$year} dengan status: " . $response->getStatusCode()); 
+                    } 
+                } 
+            } 
+            
+            return response()->json([ 
+                'message' => 'Data jadwal sholat berhasil diimpor untuk tahun ' . implode(',', $years) ]); 
+            } catch (\Exception $e) { 
+                Log::error('Exception during import: ' . $e->getMessage()); 
+                return response()->json([ 
+                    'error' => 'Terjadi kesalahan saat mengimpor data. Silakan coba lagi nanti.' 
+                ], 500); 
             }
+    }
+
+    public function JadwalsholatYear(Request $request) {
+
+        $latitude = $request->query('latitude');
+        $longitude = $request->query('longitude');
+        $year = $request->query('year');
+ 
+        if (empty($latitude) || empty($longitude) || empty($year)) {
+            return response()->json([
+                'error' => 'Latitude, longitude, dan tahun wajib diisi.'
+            ], 400);
         }
-
-        return response()->json(['message' => 'Prayer times imported successfully for the entire year']);
+        
+        try { 
+         
+         Log::info("Menerima parameter - Latitude: {$latitude}, Longitude: {$longitude}, Tahun: {$year}"); 
+         
+         $jadwalSholat = JadwalSholat::where('latitude', $latitude) 
+         ->where('longitude', $longitude) 
+         ->whereRaw('YEAR(STR_TO_DATE(gregorian_date, "%d-%m-%Y")) = ?', [$year])
+         ->get();
+         
+         $response = $jadwalSholat->map(function ($item) { 
+             return [ 
+                 'latitude' => $item->latitude, 
+                 'longitude' => $item->longitude, 
+                 'gregorian_weekday_en' => $item->gregorian_weekday_en, 
+                 'gregorian_day' => $item->gregorian_day, 
+                 'gregorian_month' => $item->gregorian_month, 
+                 'gregorian_year' => $item->gregorian_year, 
+                 'hijri_date' => $item->hijri_date, 
+                 'hijri_weekday_en' => $item->hijri_weekday_en, 
+                 'hijri_day' => $item->hijri_day, 
+                 'hijri_month' => $item->hijri_month, 
+                 'hijri_year' => $item->hijri_year, 
+                 'imsak' => $item->imsak, 
+                 'fajr' => $item->fajr, 
+                 'sunrise' => $item->sunrise, 
+                 'dhuhr' => $item->dhuhr, 
+                 'asr' => $item->asr, 
+                 'maghrib' => $item->maghrib, 
+                 'isha' => $item->isha, 
+             ]; 
+         });
+         
+         Log::info("Hasil query: " . $jadwalSholat->toJson()); 
+         
+         return response()->json(['data' => $response]);
+     } catch (\Exception $e) { 
+         
+         Log::error('Exception during fetching data: ' . $e->getMessage()); 
+         return response()->json([ 
+             'error' => 'Terjadi kesalahan saat mengambil data. Silakan coba lagi nanti.' 
+         ], 500); 
+     } 
     }
 
-    public function jadwalsholat(){
-        
-        $jadwalsholat = Jadwalsholat::all();
+    public function Jadwalsholat(Request $request) {
 
-        return response()->json([
-            'code' => 200,
-            'message' => 'Data jadwal sholat retrieved successfully',
-            'data' => JadwalsholatResource::collection($jadwalsholat),
-        ]);
-    }
+       $latitude = $request->query('latitude');
+       $longitude = $request->query('longitude');
+       $month = $request->query('month');
+       $year = $request->query('year');
 
-    public function jadwalsholatYM($year) {
+       if (empty($latitude) || empty($longitude) || empty($month) || empty($year)) {
+           return response()->json([
+               'error' => 'Latitude, longitude, bulan, dan tahun wajib diisi.'
+           ], 400);
+       }
+       
+       try { 
         
-        $jadwalsholat = Jadwalsholat::whereYear('date', $year)
+        Log::info("Menerima parameter - Latitude: {$latitude}, Longitude: {$longitude}, Bulan: {$month}, Tahun: {$year}"); 
+        
+        $jadwalSholat = JadwalSholat::where('latitude', $latitude) 
+        ->where('longitude', $longitude) 
+        ->whereRaw('MONTH(STR_TO_DATE(gregorian_date, "%d-%m-%Y")) = ?', [$month]) 
+        ->whereRaw('YEAR(STR_TO_DATE(gregorian_date, "%d-%m-%Y")) = ?', [$year])
         ->get();
-
-        return response()->json([
-            'code' => 200,
-            'message' => 'Data jadwal sholat retrieved successfully',
-            'data' => JadwalsholatResource::collection($jadwalsholat),
-        ]);
-    }
-
-    public function jadwalsholatM($year, $month) {
         
-        $jadwalsholat = Jadwalsholat::whereYear('date', $year)
-        ->whereMonth('date', $month)
-        ->get();
-
-        return response()->json([
-            'code' => 200,
-            'message' => 'Data jadwal sholat retrieved successfully',
-            'data' => JadwalsholatResource::collection($jadwalsholat),
-        ]);
+        $response = $jadwalSholat->map(function ($item) { 
+            return [ 
+                'latitude' => $item->latitude, 
+                'longitude' => $item->longitude, 
+                'gregorian_weekday_en' => $item->gregorian_weekday_en, 
+                'gregorian_day' => $item->gregorian_day, 
+                'gregorian_month' => $item->gregorian_month, 
+                'gregorian_year' => $item->gregorian_year, 
+                'hijri_date' => $item->hijri_date, 
+                'hijri_weekday_en' => $item->hijri_weekday_en, 
+                'hijri_day' => $item->hijri_day, 
+                'hijri_month' => $item->hijri_month, 
+                'hijri_year' => $item->hijri_year, 
+                'imsak' => $item->imsak, 
+                'fajr' => $item->fajr, 
+                'sunrise' => $item->sunrise, 
+                'dhuhr' => $item->dhuhr, 
+                'asr' => $item->asr, 
+                'maghrib' => $item->maghrib, 
+                'isha' => $item->isha, 
+            ]; 
+        });
+        
+        Log::info("Hasil query: " . $jadwalSholat->toJson()); 
+        
+        return response()->json(['data' => $response]); 
+    } catch (\Exception $e) { 
+        
+        Log::error('Exception during fetching data: ' . $e->getMessage()); 
+        return response()->json([ 
+            'error' => 'Terjadi kesalahan saat mengambil data. Silakan coba lagi nanti.' 
+        ], 500); 
     }
+    }  
 }

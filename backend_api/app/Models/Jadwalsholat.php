@@ -11,6 +11,26 @@ class Jadwalsholat extends Model
 
     protected $table = 'jadwalsholats';
 
-    protected $fillable = ['date', 'fajr', 'dhuhr', 'asr', 'maghrib', 'isha'];
+    protected $fillable = [
+        'latitude',
+        'longitude',
+        'gregorian_date',
+        'gregorian_weekday_en',
+        'gregorian_day',
+        'gregorian_month',
+        'gregorian_year',
+        'hijri_date',
+        'hijri_weekday_en',
+        'hijri_day',
+        'hijri_month',
+        'hijri_year',
+        'imsak',
+        'fajr',
+        'sunrise',
+        'dhuhr',
+        'asr',
+        'maghrib',
+        'isha',
+    ];
 
 }

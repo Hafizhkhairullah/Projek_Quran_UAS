@@ -18,6 +18,7 @@ return new class extends Migration
             $table->text('teks_arab');
             $table->text('teks_latin');
             $table->text('teks_terjemahan');
+            $table->json('audio');
             $table->timestamps();
         });
     }

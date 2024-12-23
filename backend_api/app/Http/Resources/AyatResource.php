@@ -20,6 +20,7 @@ class AyatResource extends JsonResource
             'teks_arab' => $this->teks_arab,
             'teks_latin' => $this->teks_latin,
             'teks_terjemahan' => $this->teks_terjemahan,
+            'audio' => json_encode($this->audio),
         ];
     }
 }
