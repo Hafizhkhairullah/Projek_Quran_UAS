@@ -294,7 +294,7 @@ class AlquranController extends Controller
      } 
     }
 
-    public function Jadwalsholat(Request $request) {
+    public function JadwalsholatMonth(Request $request) {
 
        $latitude = $request->query('latitude');
        $longitude = $request->query('longitude');
