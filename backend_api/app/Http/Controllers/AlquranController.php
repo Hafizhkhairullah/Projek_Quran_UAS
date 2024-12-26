@@ -20,10 +20,10 @@ class AlquranController extends Controller
     public function surah() {
         
         $response = Http::get('https://equran.id/api/v2/surat');
-
+        
         if ($response->successful()) {
             $data = $response->json()['data'];
-
+            
             foreach ($data as $item) {
                 Surah::updateOrCreate(
                     ['nomor' => $item['nomor']],
@@ -34,87 +34,78 @@ class AlquranController extends Controller
                         'jumlah_ayat' => $item['jumlahAyat'],
                         'tempat_turun' => $item['tempatTurun'],
                         'audio_full' => json_encode($item['audioFull']),
-                    ]
-                );
+                        ]
+                    );
+                }
+                
+                $surah = Surah::all();
+                
+                return response()->json([
+                    'code' => 200,
+                    'message' => 'Data surah retrieved successfully',
+                    'data' => SurahResource::collection($surah),
+                ]);
+            } else {
+                return response()->json([
+                    'code' => 500,
+                    'message' => 'Failed to fetch data surah from external API'
+                ], 500);
             }
-
-            $surah = Surah::all();
-
-            return response()->json([
-                'code' => 200,
-                'message' => 'Data surah retrieved successfully',
-                'data' => SurahResource::collection($surah),
-            ]);
-        } else {
-            return response()->json([
-                'code' => 500,
-                'message' => 'Failed to fetch data surah from external API'
-            ], 500);
-        }
     }
-
+    
     public function importAyat() {
-
+        
         $client = new Client([
             'timeout' => 7200,
             'connect_timeout' => 7200,
             'retry' => 10,
         ]);
-
-        $failedSurah = [];  
-
+        
         for ($nomor = 1; $nomor <= 114; $nomor++) {
-            $url = "https://equran.id/api/v2/surat/{$nomor}";
-            try {
-                $response = $client->get($url);
-                $data = json_decode($response->getBody()->getContents(), true)['data'];
-                $ayatData = $data['ayat'];
-
-                foreach ($ayatData as $ayat) {
-                    Ayat::updateOrCreate(
-                        [
-                            'nomor_surah' => $nomor,
-                            'nomor_ayat' => $ayat['nomorAyat'],
-                        ],
-                        [
-                            'teks_arab' => $ayat['teksArab'],
-                            'teks_latin' => $ayat['teksLatin'],
-                            'teks_terjemahan' => $ayat['teksIndonesia'],
-                            'audio' => json_encode($ayat['audio']),
-                        ]
-                        );
-                    }
-                } catch (\Exception $e) {
-                    Log::error("Failed to fetch data Ayat for surah {$nomor} from external API: " . $e->getMessage());
-                    $failedSurah[] = $nomor;
+            $url = "https://equran.id/api/v2/surat/{$nomor}"; 
+            $response = Http::get($url);
+            
+            if ($response->successful()) {
+                $data = $response->json()['data']['ayat'];
+                
+                foreach ($data as $ayat) {
+                    Ayat::updateOrCreate([
+                        'nomor_surah' => $nomor,
+                        'nomor_ayat' => $ayat['nomorAyat'],
+                    ],
+                    [
+                        'teks_arab' => $ayat['teksArab'],
+                        'teks_latin' => $ayat['teksLatin'],
+                        'teks_terjemahan' => $ayat['teksIndonesia'],
+                        'audio' => json_encode($ayat['audio']),
+                    ]);
                 }
-            } 
-
-            if (empty($failedSurahs)) { 
-                return response()->json([ 
-                    'code' => 200, 
-                    'message' => 'All ayat data retrieved successfully' 
-                ]);
-        } else {
-            return response()->json([ 
-                'code' => 206, 
-                'message' => 'Some ayat data failed to be retrieved', 
-                'failedSurahs' => $failedSurahs 
-            ]); 
+            } else {
+                return response()->json([
+                    'code' => 500,
+                    'message' => "Failed to fetch data ayat for surah {$nomor} from external API"
+                ], 500);
+            }
         } 
+    
+        return response()->json([
+            'code' => 200,
+            'message' => 'All ayat data retrieved successfully'
+        ]);
     }
+    
+    
 
-        public function ayat($nomor) {
-
-            $ayat = Ayat::where('nomor_surah', $nomor)->get();
+    public function ayat($nomor) {
+        $ayat = Ayat::where('nomor_surah', $nomor)->get();
             return response()->json([
                'code' => 200,
                'message' => 'Data ayat retrieved successfully',
                'data' => AyatResource::collection($ayat),
             ]);
-        }
+    }
 
-        public function importTafsir() {
+    public function importTafsir() {
 
             $client = new Client([
                 'timeout' => 7200,

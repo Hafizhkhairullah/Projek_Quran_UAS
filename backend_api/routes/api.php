@@ -10,8 +10,8 @@ Route::get('/surah/{nomor}', [AlquranController::class, 'Ayat']);
 Route::get('/tafsir/import-tafsir', [AlquranController::class, 'importTafsir']);
 Route::get('/tafsir/{nomor}', [AlquranController::class, 'tafsir']);
 Route::get('/import-jadwalsholat', [AlquranController::class, 'importJadwalsholat']);
-Route::get('/jadwalsholaty', [AlquranController::class, 'JadwalsholatYear']);
-Route::get('/jadwalsholatm', [AlquranController::class, 'JadwalsholatMonth']);
+Route::get('/jadwalsholatbyYear', [AlquranController::class, 'JadwalsholatYear']);
+Route::get('/jadwalsholatbyMonth', [AlquranController::class, 'JadwalsholatMonth']);
 
 
 
