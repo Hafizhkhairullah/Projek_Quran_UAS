@@ -59,7 +59,7 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
     // Fetch Surahs
-    fetch('http://localhost:8000/api/surah')
+    fetch('http://127.0.0.1:8000/api/surah')
       .then(response => response.json())
       .then(data => {
         surahList = data.data;
