@@ -33,7 +33,7 @@ document.addEventListener("DOMContentLoaded", () => {
             surahElement.addEventListener("click", () => {
                 searchInput.value = ''; // Clear the search input when navigating away
                 renderSurahList(surahs); // Reset the surah list
-                window.location.href = `./ayat/ayat.html?surah=${surah.nomor}`;
+                window.location.href = `ayat.html?surah=${surah.nomor}`;
             });
 
             surahListContainer.appendChild(surahElement);

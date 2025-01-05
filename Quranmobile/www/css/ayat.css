@@ -1,0 +1,74 @@
+body {
+    font-family: 'Roboto', sans-serif;
+}
+.container {
+    max-width: 100%;
+    background-color: white;
+    border-radius: 15px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    margin-bottom: 20px;
+}
+.card {
+    background: linear-gradient(135deg, #6B46C1, #805AD5);
+    border-radius: 15px;
+    padding: 20px;
+    color: white;
+    text-align: center;
+    max-width: 100%;
+}
+.arabic-text {
+    font-size: 2.5rem;
+    font-family: 'Scheherazade', serif;
+    text-align: right;
+    margin-bottom: 15px; /* Menambahkan jarak di bawah teks Arab */
+}
+.surah-title {
+    font-size: 2rem;
+    font-weight: bold;
+}
+.surah-info {
+    font-size: 1rem;
+    color: #E2E8F0;
+}
+.horizontal-line {
+    border-bottom: 2px solid white;
+    margin: 10px 0;
+}
+.button-group {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 15px;
+}
+.button-group button {
+    background-color: #4C51BF;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    width: 48%;
+}
+.button-group button i {
+    margin-right: 10px;
+}
+.ayat-container {
+    margin-top: 20px;
+    background-color: #F7FAFC;
+    padding: 20px;
+    border-radius: 15px;
+}
+.ayat-container .ayat {
+    background-color: white;
+    border: 1px solid #E2E8F0;
+    border-radius: 10px;
+    padding: 15px;
+    margin-bottom: 15px;
+}
+.ayat-container .ayat p {
+    margin-bottom: 10px; /* Menambahkan jarak antara teks */
+}
+.ayat-container .ayat .text-latin,
+.ayat-container .ayat .text-indonesia {
+    margin-top: 10px; /* Menambahkan jarak di atas teks Latin dan teks Indonesia */
+}
