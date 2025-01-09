@@ -220,3 +220,18 @@ select.light-dropdown {
   background-color: #ffffff; 
   color: #000; 
 }
+
+/* Gaya untuk konten tafsir */
+.tafsir-content {
+  background-color: #f0f0f0;
+  color: #000000;
+  padding: 20px;
+  border-radius: 8px;
+}
+
+/* Gaya untuk konten tafsir saat mode gelap */
+.dark-mode .tafsir-content {
+  background-color: #2d3748;
+  color: #edf2f7;
+  border: 1px solid #4a5568;
+}
