@@ -1,0 +1,73 @@
+@font-face {
+    font-family: 'Me Quran';
+    src: url('https://kangismet.github.io/fonts/me_quran.eot');
+    src: url('https://kangismet.github.io/fonts/me_quran.eot?#iefix') format('embedded-opentype'),
+         url('https://kangismet.github.io/fonts/me_quran.ttf') format('truetype');
+    font-weight: normal;
+    font-display: swap;
+  }
+  body.dark-mode {
+    background-color: #1a202c;
+    color: #edf2f7;
+  }
+  .dark-mode .bg-white {
+    background-color: #2d3748;
+  }
+  .arabic-font {
+    font-family: 'Me Quran', serif;
+    font-size: 26px;
+    line-height: 48px;
+    text-align: right;
+    direction: rtl;
+  }
+  #search-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 1000;
+  }
+  #search-overlay .search-box {
+    position: relative;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    width: 80%;
+    max-height: 70%;
+    overflow-y: auto;
+  }
+  .dark-mode #search-overlay .search-box {
+    background: #2d3748;
+  }
+  .search-input {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 20px;
+    border: 1px solid #000000;
+    border-radius: 4px;
+  }
+  .dark-mode .search-input {
+    background-color: #4a5568; /* Warna abu-abu gelap */
+    color: #edf2f7; /* Warna teks putih */
+    border-color: #2d3748; /* Warna border untuk mode gelap */
+  }
+  #search-results {
+    max-height: 300px;
+    overflow-y: auto;
+  }
+  .dark-mode #search-results {
+    background-color: #2d3748; /* Latar belakang hasil pencarian */
+    color: #edf2f7; /* Warna teks hasil pencarian */
+  }
+  .hover-highlight:hover .text-lg.font-semibold {
+    color: #48bb78; /* Hijau terang */
+  }
+  .dark-mode .hover-highlight:hover .text-lg.font-semibold {
+    color: #68d391; /* Hijau terang untuk mode gelap */
+  }

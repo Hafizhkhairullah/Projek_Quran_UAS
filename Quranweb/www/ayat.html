@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+  <title>AlquranQu</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/ayat.css">
+</head>
+<body class="bg-gray-50">
+  <!-- Header section start-->
+  <header class="bg-white py-4 shadow dark:bg-gray-800">
+    <div class="container mx-auto flex justify-between items-center px-4">
+      <div class="flex items-center">
+        <img alt="AlquranQu Logo" class="h-10 object-contain" src="img/image.png" />
+        <span class="ml-4 text-lg font-semibold text-green-800 dark:text-green-400">
+          AlquranQu
+        </span>
+      </div>
+      <div class="flex items-center space-x-4">
+        <!-- Tombol untuk membuka overlay pencarian, berubah warna di mode gelap -->
+        <button id="search-toggle" class="text-green-500 dark:text-green-300">
+          <i class="fas fa-search"></i>
+        </button>
+        <!-- Tombol untuk mengganti tema (mode terang/gelap), berubah warna di mode gelap -->
+        <button id="theme-toggle" class="text-green-500 dark:text-green-300">
+          <i class="fas fa-moon"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+  <!-- Header section end -->
+
+  <!-- Main content section start -->
+  <main class="container mx-auto mt-8 px-4">
+    <!-- Link kembali ke daftar surah -->
+    <div class="flex justify-between items-center mb-4">
+      <a href="index.html" class="text-teal-600 flex items-center">
+        <i class="fas fa-arrow-left mr-2"></i> Daftar Surah
+      </a>
+    </div>
+    <!-- Placeholder untuk detail surah -->
+    <div id="surah-details" class="surah-details text-center">
+      <!-- Konten detail surah akan dimuat di sini -->
+    </div>
+    <!-- Placeholder untuk daftar ayat -->
+    <div id="ayat-list" class="space-y-4">
+      <!-- Konten ayat akan dimuat di sini -->
+    </div>
+  </main>
+  <!-- Main content section end -->
+
+  <!-- Overlay pencarian -->
+  <div id="search-overlay">
+    <div class="search-box">
+      <!-- Input pencarian -->
+      <input type="text" id="search-input" class="search-input" placeholder="Cari ayat...">
+      <!-- Hasil pencarian akan dimuat di sini -->
+      <div id="search-results" class="mt-4"></div>
+    </div>
+  </div>
+  <script src="js/ayat.js"></script>
+</body>
+</html>
