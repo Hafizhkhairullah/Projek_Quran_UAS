@@ -4,8 +4,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const surahInfo = document.getElementById("surah-info");
     const params = new URLSearchParams(window.location.search);
     const surahNomor = params.get("surah");
-    const ayatApiEndpoint = `https://759d-103-171-83-15.ngrok-free.app/api/surah/${surahNomor}`;
-    const surahApiEndpoint = "https://759d-103-171-83-15.ngrok-free.app/api/surah";
+    const ayatApiEndpoint = `https://639e-103-171-83-15.ngrok-free.app/api/surah/${surahNomor}`;
+    const surahApiEndpoint = "https://639e-103-171-83-15.ngrok-free.app/api/surah";
     const audio = new Audio();
     let isPlaying = false;
 

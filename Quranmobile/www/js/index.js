@@ -1,7 +1,7 @@
 document.addEventListener("DOMContentLoaded", () => {
     const surahListContainer = document.getElementById("surah-list");
     const searchInput = document.getElementById("search-input");
-    const apiEndpoint = "https://759d-103-171-83-15.ngrok-free.app/api/surah";
+    const apiEndpoint = "https://639e-103-171-83-15.ngrok-free.app/api/surah";
 
     let surahs = [];
 
